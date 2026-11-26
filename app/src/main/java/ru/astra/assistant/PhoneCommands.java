@@ -40,7 +40,7 @@ final class PhoneCommands {
         cancel();
         if(s.equals("прими звонок")||s.equals("ответь на звонок")||s.equals("ответить на звонок"))
             return controlCall(true);
-        if(s.equals("заверши звонок")||s.equals("заверши разговор")||s.equals("положи трубку")||s.equals("отклони звонок"))
+        if(s.equals("заверши звонок")||s.equals("заверши разговор")||s.equals("положи трубку"))
             return controlCall(false);
         if(s.equals("повтори звонок")||s.equals("набери последний номер")){
             return lastNumber==null?"В этой сессии нет предыдущего номера":prepare("последний номер Астры",lastNumber);
@@ -100,7 +100,8 @@ final class PhoneCommands {
         if(telecom==null)return "Телефонная служба недоступна";
         try{
             if(answer){
-                if(!telecom.isRinging())return "Входящего звонка нет";
+                android.telephony.TelephonyManager telephony=context.getSystemService(android.telephony.TelephonyManager.class);
+                if(telephony==null||telephony.getCallState()!=android.telephony.TelephonyManager.CALL_STATE_RINGING)return "Входящий звонок не обнаружен";
                 telecom.acceptRingingCall(android.telecom.VideoProfile.STATE_AUDIO_ONLY);
                 return "Запрос на приём звонка отправлен";
             }
