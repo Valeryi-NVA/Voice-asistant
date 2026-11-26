@@ -33,7 +33,7 @@ public class MainActivity extends Activity {
         root.addView(status);
         input = new EditText(this); input.setHint("Введите команду"); root.addView(input);
         button(root,"Настройки локального ИИ",v -> AstraBrain.settings(this));
-        button(root,"Разрешения звонков и контактов",v -> requestPermissions(new String[]{Manifest.permission.READ_CONTACTS,Manifest.permission.CALL_PHONE},5));
+        button(root,"Разрешения звонков и контактов",v -> requestPermissions(new String[]{Manifest.permission.READ_CONTACTS,Manifest.permission.CALL_PHONE,Manifest.permission.ANSWER_PHONE_CALLS,Manifest.permission.READ_PHONE_STATE},5));
         button(root,"Слушать",v -> {stopService(new Intent(this,VoiceService.class));listen();});
         button(root,"Включить фоновую Астру",v -> startBackgroundVoice());
         button(root,"Выключить фоновую Астру",v -> {stopService(new Intent(this,VoiceService.class));status.setText("Фоновый режим выключен");});

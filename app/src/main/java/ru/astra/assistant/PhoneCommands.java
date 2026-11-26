@@ -38,6 +38,10 @@ final class PhoneCommands {
             }catch(RuntimeException e){return "Не удалось начать звонок";}
         }
         cancel();
+        if(s.equals("прими звонок")||s.equals("ответь на звонок")||s.equals("ответить на звонок"))
+            return controlCall(true);
+        if(s.equals("заверши звонок")||s.equals("заверши разговор")||s.equals("положи трубку")||s.equals("отклони звонок"))
+            return controlCall(false);
         if(s.equals("повтори звонок")||s.equals("набери последний номер")){
             return lastNumber==null?"В этой сессии нет предыдущего номера":prepare("последний номер Астры",lastNumber);
         }
@@ -86,6 +90,24 @@ final class PhoneCommands {
             }catch(RuntimeException e){return "Не удалось проверить аудиовыходы";}
         }
         return null;
+    }
+    @SuppressWarnings("deprecation")
+    private String controlCall(boolean answer){
+        if(context.checkSelfPermission(Manifest.permission.ANSWER_PHONE_CALLS)!=PackageManager.PERMISSION_GRANTED
+            ||context.checkSelfPermission(Manifest.permission.READ_PHONE_STATE)!=PackageManager.PERMISSION_GRANTED)
+            return "На стоянке разрешите Астре управление звонками и состояние телефона";
+        TelecomManager telecom=context.getSystemService(TelecomManager.class);
+        if(telecom==null)return "Телефонная служба недоступна";
+        try{
+            if(answer){
+                if(!telecom.isRinging())return "Входящего звонка нет";
+                telecom.acceptRingingCall(android.telecom.VideoProfile.STATE_AUDIO_ONLY);
+                return "Запрос на приём звонка отправлен";
+            }
+            if(android.os.Build.VERSION.SDK_INT<28)return "Завершение звонков требует Android 9 или новее";
+            if(!telecom.isInCall())return "Активных звонков нет";
+            return telecom.endCall()?"Звонок завершён":"Не удалось завершить звонок";
+        }catch(RuntimeException e){return "Android не разрешил управление звонком";}
     }
     private String prepare(String name,String raw){
         String n=raw.replaceAll("[^+0-9]","");
