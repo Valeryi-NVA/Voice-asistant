@@ -3,6 +3,10 @@
 <uses-permission android:name="android.permission.READ_CONTACTS"/>
 <uses-permission android:name="android.permission.CALL_PHONE"/>
 <uses-permission android:name="android.permission.INTERNET"/>
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE"/>
+<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 <queries>
 <package android:name="ru.yandex.yandexnavi"/>
 <package android:name="ru.yandex.music"/>
@@ -11,5 +15,6 @@
 </queries>
 <application android:label="Астра" android:theme="@android:style/Theme.Material.NoActionBar" android:allowBackup="false" android:usesCleartextTraffic="false">
 <activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity>
+<service android:name=".VoiceService" android:exported="false" android:foregroundServiceType="microphone"/>
 </application>
 </manifest>

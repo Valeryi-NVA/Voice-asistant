@@ -31,11 +31,13 @@ public class MainActivity extends Activity {
         status = new TextView(this); status.setTextSize(22); status.setText("Астра • режим разработки");
         root.addView(status);
         input = new EditText(this); input.setHint("Введите команду"); root.addView(input);
-        button(root,"Слушать",v -> listen());
+        button(root,"Слушать",v -> {stopService(new Intent(this,VoiceService.class));listen();});
+        button(root,"Включить фоновую Астру",v -> startBackgroundVoice());
+        button(root,"Выключить фоновую Астру",v -> {stopService(new Intent(this,VoiceService.class));status.setText("Фоновый режим выключен");});
         button(root,"Выполнить",v -> command(input.getText().toString()));
         button(root,"Навигатор",v -> launch("ru.yandex.yandexnavi"));
         button(root,"Яндекс Музыка",v -> launch("ru.yandex.music"));
-        button(root,"Остановить",v -> { if(speech!=null) speech.cancel(); listening=false; if(tts!=null)tts.stop(); pendingNumber=null; status.setText("Остановлено"); });
+        button(root,"Остановить",v -> { if(speech!=null) speech.cancel(); listening=false; if(tts!=null)tts.stop(); pendingNumber=null; stopService(new Intent(this,VoiceService.class)); status.setText("Остановлено"); });
         setContentView(root);
         tts = new TextToSpeech(this, s -> { if(s==TextToSpeech.SUCCESS && tts!=null) ttsReady=tts.setLanguage(new Locale("ru","RU"))>=0; });
         if(SpeechRecognizer.isRecognitionAvailable(this)) {
@@ -47,11 +49,29 @@ public class MainActivity extends Activity {
                 public void onBufferReceived(byte[] b){}
                 public void onEndOfSpeech(){}
                 public void onError(int e){listening=false;status.setText("Речь не распознана. Код "+e);}
-                public void onResults(Bundle b){listening=false; ArrayList<String> r=b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION); if(r!=null&&!r.isEmpty())command(r.get(0));}
+                public void onResults(Bundle b){listening=false; ArrayList<String> r=b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION); if(r!=null&&!r.isEmpty()&&!VoiceGate.isRoadAlert(r.get(0)))command(r.get(0));}
                 public void onPartialResults(Bundle b){}
                 public void onEvent(int e,Bundle b){}
             });
         }
+    }
+    private void startBackgroundVoice(){
+        if(android.os.Build.VERSION.SDK_INT<31 || !SpeechRecognizer.isOnDeviceRecognitionAvailable(this)){
+            say("Локальное распознавание недоступно");return;
+        }
+        if(checkSelfPermission(Manifest.permission.RECORD_AUDIO)!=PackageManager.PERMISSION_GRANTED){
+            requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO},3);return;
+        }
+        if(android.os.Build.VERSION.SDK_INT>=33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED){
+            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS},4);return;
+        }
+        if(speech!=null)speech.cancel();listening=false;if(tts!=null)tts.stop();
+        try{startForegroundService(new Intent(this,VoiceService.class));status.setText("Фоновый режим запрошен");}
+        catch(RuntimeException e){say("Не удалось запустить фоновый режим");}
+    }
+    @Override public void onRequestPermissionsResult(int request,String[] permissions,int[] results){
+        super.onRequestPermissionsResult(request,permissions,results);
+        if((request==3||request==4)&&results.length>0&&results[0]==PackageManager.PERMISSION_GRANTED)startBackgroundVoice();
     }
     private void button(LinearLayout root,String title,android.view.View.OnClickListener l){Button b=new Button(this);b.setText(title);b.setOnClickListener(l);root.addView(b);}
     private void say(String s){status.setText(s);if(ttsReady&&tts!=null)tts.speak(s,TextToSpeech.QUEUE_FLUSH,null,UUID.randomUUID().toString());}
