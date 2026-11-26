@@ -17,11 +17,13 @@ public class VoiceService extends Service implements RecognitionListener {
     private TextToSpeech tts;
     private boolean ready,active,speaking;
     private long commandUntil;
+    private PhoneCommands phone;
     private int failures;
     private final Runnable listenTask=()->listen();
     @Override public IBinder onBind(Intent i){return null;}
     @Override public void onCreate(){
         super.onCreate();
+        phone=new PhoneCommands(this);
         getSystemService(NotificationManager.class).createNotificationChannel(new NotificationChannel(CHANNEL,"Голосовой режим Астры",NotificationManager.IMPORTANCE_LOW));
         tts=new TextToSpeech(this,status->{
             if(status==TextToSpeech.SUCCESS && tts!=null){
@@ -87,6 +89,11 @@ public class VoiceService extends Service implements RecognitionListener {
         commandUntil=0;execute(cmd);
     }
     private void execute(String s){
+        String phoneReply=phone.handle(s);
+        if(phoneReply!=null){
+            if(phone.awaiting())commandUntil=SystemClock.elapsedRealtime()+20000;
+            say(phoneReply);return;
+        }
         switch(s){
             case "следующий трек": media(KeyEvent.KEYCODE_MEDIA_NEXT);break;
             case "предыдущий трек": media(KeyEvent.KEYCODE_MEDIA_PREVIOUS);break;
