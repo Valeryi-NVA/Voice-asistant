@@ -31,6 +31,7 @@ public class MainActivity extends Activity {
         status = new TextView(this); status.setTextSize(22); status.setText("Астра • режим разработки");
         root.addView(status);
         input = new EditText(this); input.setHint("Введите команду"); root.addView(input);
+        button(root,"Настройки локального ИИ",v -> AstraBrain.settings(this));
         button(root,"Слушать",v -> {stopService(new Intent(this,VoiceService.class));listen();});
         button(root,"Включить фоновую Астру",v -> startBackgroundVoice());
         button(root,"Выключить фоновую Астру",v -> {stopService(new Intent(this,VoiceService.class));status.setText("Фоновый режим выключен");});
@@ -100,7 +101,7 @@ public class MainActivity extends Activity {
         if(s.contains("пауза")){media(KeyEvent.KEYCODE_MEDIA_PAUSE);return;}
         if(s.equals("продолжить музыку")){media(KeyEvent.KEYCODE_MEDIA_PLAY);return;}
         if(s.contains("музык")){launch("ru.yandex.music");return;}
-        say("Команда пока не поддерживается");
+        AstraBrain.reply(this,s,answer->{if(!isFinishing()&&!isDestroyed())say(answer);});
     }
     private void findNumber(String name){
         if(name.matches("[+0-9 ()-]{3,25}")){confirm(name,name);return;}
