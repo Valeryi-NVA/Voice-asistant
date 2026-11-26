@@ -102,7 +102,7 @@ public class VoiceService extends Service implements RecognitionListener {
                 say(vpn?"VPN активен. Тип VPN не определен":"VPN не обнаружен");return;
             case "отмена":schedule(300);return;
             case "останови астру":stopSelf();return;
-            default:say("Эта команда пока недоступна в фоновом режиме");return;
+            default:AstraBrain.reply(this,s,answer->{if(active)say(answer);});return;
         }
         schedule(400);
     }
